@@ -8,7 +8,6 @@ const connection = mysql.createConnection({
         database:'blog'
     })
 export function connectDB(){
-    console.log("Abc")
     connection.connect(err=>{
         if(err) throw err
         else{

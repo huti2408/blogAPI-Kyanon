@@ -34,9 +34,9 @@ export default class UserController{
             const dateNow = new Date();
             const {firstName, middleName,lastName,mobile,email,password} = req.body;
             var passwordHash = md5(password);
-            let findExisted = `Select * from user Where email = ${email}`
+            let findExisted = `Select * from user Where email = '${email}'`
             var existedUser: any; 
-            await connection.query(findExisted,(err,result)=>{
+            connection.query(findExisted,(err,result)=>{
                 existedUser = result
             })
             if(!existedUser){
@@ -48,7 +48,7 @@ export default class UserController{
                 '${email}',
                 '${passwordHash}',
                 '${dateNow.getFullYear().toString()+ '-' + dateNow.getMonth() + '-' + dateNow.getDate() +" " +dateNow.getHours() + ":" + dateNow.getMinutes() + ":" + dateNow.getSeconds()}')`
-                await connection.query(sql,(err)=>{
+            connection.query(sql,(err)=>{
                     if(err) throw err
                     else res.status(StatusCodes.CREATED).json("Register successfully!")
                 })
@@ -101,12 +101,23 @@ export default class UserController{
         try{
            const {email, password} = req.body
            const passwordHash = md5(password)
+           let findExisted = `Select * from user Where email = '${email}'`
+           var existedUser = (await connection.promise().query(findExisted))[0][0]
            if(!email || !password){
                res.status(StatusCodes.BAD_REQUEST).json("Bad Request")
            }
            else {
-               const users = await User.find()[0]
-               const user = users.find(user=> user.email === email)
+               if(!existedUser || existedUser.passwordHash !== passwordHash){
+                   res.status(StatusCodes.OK).json("Email or password is not correct!")
+               }
+               else{
+                const userId = existedUser.id
+                const userEmail = existedUser.email;
+                const token = jwt.sign({
+                    id:userId,email:userEmail
+                },process.env.KEY_JWT || "SADASC")
+                res.status(StatusCodes.ACCEPTED).json(token)
+               }
            }
         }
         catch(err){

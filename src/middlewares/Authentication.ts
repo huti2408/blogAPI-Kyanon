@@ -7,7 +7,8 @@ const TOKEN_VALUE_INDEX = 1
 export default async (req:Request,res:Response,next:NextFunction)=>{
     const token = req.headers["authorization"]?.split(" ")[TOKEN_VALUE_INDEX] || ""
     try {
-        await jwt.verify(token, process.env.KEY_JWT || "nothing")
+         jwt.verify(token, process.env.KEY_JWT || "nothing")
+        next()
     }
     catch(err:any){
         console.log(err)
@@ -15,4 +16,5 @@ export default async (req:Request,res:Response,next:NextFunction)=>{
             err
         })
     }
+
 }
