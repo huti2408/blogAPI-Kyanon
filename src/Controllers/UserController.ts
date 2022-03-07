@@ -5,6 +5,7 @@ import md5 from "md5"
 import apiMessage from "../constants/Message";
 import connection from "../lib/mysql-connection";
 import User from "../Models/User"
+import { SetValue} from "../lib/redis-helper";
 
 export default class UserController{
     public static async GetAllUsers(req: Request, res: Response){
@@ -113,9 +114,17 @@ export default class UserController{
                else{
                 const userId = existedUser.id
                 const userEmail = existedUser.email;
+                const date = new Date()
                 const token = jwt.sign({
                     id:userId,email:userEmail
                 },process.env.KEY_JWT || "SADASC")
+                SetValue(userId,{
+                    userId:userId,
+                    token_value:token,
+                    is_valid:true,
+                    createdAt:date.toLocaleString('en-GB', { timeZone: 'UTC' }),
+                    updatedAt:null
+                })
                 res.status(StatusCodes.ACCEPTED).json(token)
                }
            }
