@@ -10,7 +10,7 @@ import { SetValue} from "../lib/redis-helper";
 export default class UserController{
     public static async GetAllUsers(req: Request, res: Response){
         try{
-            res.status(200).json((await User.find())[0])      
+            res.status(StatusCodes.OK).json((await User.find())[0])      
         }
         catch(err){
             console.log(err.message);
@@ -90,7 +90,7 @@ export default class UserController{
     public static async DeleteUser(req: Request, res: Response){
         try{
             const {id} = req.params;
-            await User.deleteById(id)
+             User.deleteById(id)
             res.status(StatusCodes.OK).json(apiMessage.DELETE);
         }
         catch(err){

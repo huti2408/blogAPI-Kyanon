@@ -49,10 +49,11 @@ export default class PostController{
     public static async UpdatePost(req: Request, res: Response){
         try{
             const {id} = req.params;
-            const {title,slug,content} = req.body
+            const {title,slug,content,authorId} = req.body
             const dateNow = new Date();
             let sql = `UPDATE post SET 
             title = '${title}', 
+            authorId = ${authorId},
             slug='${slug}',
             updatedAt = '${dateNow.getFullYear().toString()+ '-' + dateNow.getMonth() + '-' + dateNow.getDate() +" " +dateNow.getHours() + ":" + dateNow.getMinutes() + ":" + dateNow.getSeconds()}',
             content = '${content}'

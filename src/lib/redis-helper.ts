@@ -11,14 +11,14 @@ export default async function ConnectRedis(){
     
 export async function SetValue(key:string, value:any){
     const arrObj = await client.lRange(key,0,-1)
-    arrObj.map(obj=>{
-        client.lRem(key,0,obj)
+    arrObj.map(async obj=>{
+        await client.lRem(key,0,obj)
         const newObj =  JSON.parse(obj)
         newObj.is_valid = false
         if(!newObj.updatedAt){
             newObj.updatedAt = new Date().toLocaleString('en-GB', { timeZone: 'UTC' })
         }
-        client.rPush(key, JSON.stringify(newObj));
+        await client.rPush(key, JSON.stringify(newObj));
     })
     
     await client.rPush(key, JSON.stringify(value));
