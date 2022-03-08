@@ -2,12 +2,23 @@ import {Request,Response } from "express";
 import apiMessage from "../constants/Message";
 import connection from "../lib/mysql-connection";
 import Category from "../Models/Category";
+import client from "../lib/redis-helper"
 
 
 export default class CategoryController{
     public static async GetAllCategorys(req: Request, res: Response){
         try{     
-            res.status(200).json((await Category.find())[0]) 
+            const cates = (await Category.find())[0]
+            const data = await client.get("cates")
+            if(data === null)
+            {
+                await client.setEx("cates",3600,JSON.stringify(cates))
+                res.status(200).json((await Category.find())[0]) 
+            }
+            else{
+                res.status(200).json(JSON.parse(data)) 
+
+            } 
         }
         catch(err){
             console.log(err.message);

@@ -3,7 +3,7 @@ import {connectDB} from "./lib/mysql-connection";
 import router from "./Routes/index"
 import bodyParser from "body-parser"
 import 'dotenv/config'
-import ConnectRedis from "./lib/redis-helper";
+import {ConnectRedis} from "./lib/redis-helper";
 
 
 connectDB()

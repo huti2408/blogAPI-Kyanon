@@ -4,7 +4,8 @@ import { createClient } from "redis";
 const client = createClient({
     url: `redis://:@127.0.0.1:6379`
 });
-export default async function ConnectRedis(){
+export default client;
+export async function ConnectRedis(){
     client.on('error', (err) => console.log('Redis Client Error', err)); 
     await client.connect();
 }
@@ -29,3 +30,4 @@ export async function GetValue(key:any){
     const arrObj = await client.lRange(key,0,-1)
     return arrObj.map(obj=>obj = JSON.parse(obj))
 }
+

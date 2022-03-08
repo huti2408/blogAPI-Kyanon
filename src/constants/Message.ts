@@ -17,7 +17,7 @@
         StatusCodes:500
     },
     BAD_REQUEST: {
-        message:"BAD BAD_REQUEST",
+        message:"BAD_REQUEST",
         StatusCodes:400
     }
 
