@@ -11,23 +11,14 @@ export async function ConnectRedis(){
 }
     
 export async function SetValue(key:string, value:any){
-    const arrObj = await client.lRange(key,0,-1)
-    arrObj.map(async obj=>{
-        await client.lRem(key,0,obj)
-        const newObj =  JSON.parse(obj)
-        newObj.is_valid = false
-        if(!newObj.updatedAt){
-            newObj.updatedAt = new Date().toLocaleString('en-GB', { timeZone: 'UTC' })
-        }
-        await client.rPush(key, JSON.stringify(newObj));
-    })
-    
-    await client.rPush(key, JSON.stringify(value));
-    
+
+    await client.setEx(key,60 * 60 * 4,value)
 }
 
 export async function GetValue(key:any){
-    const arrObj = await client.lRange(key,0,-1)
-    return arrObj.map(obj=>obj = JSON.parse(obj))
+    return await client.get(key)
+}
+export async function DeleteValue(key:any){
+    return await client.del(key)
 }
 

@@ -9,7 +9,7 @@ import Action from "../constants/ActionPermission";
 
 const router = Router();
 
-router.get("/",CheckPermission(Action.READ_POST),PostController.GetAllPosts)
+router.get("/",CheckPermission(Action.READ_POST),Authentication,PostController.GetAllPosts)
 router.post("/",CheckPermission(Action.WRITE_POST),Authentication,PostController.CreatePost)
 router.get("/:id",CheckPermission(Action.READ_POST),Authentication,PostController.GetPost)
 router.put("/:id",Authentication,PostController.UpdatePost)

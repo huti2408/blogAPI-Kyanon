@@ -8,7 +8,7 @@ import CheckPermission from "../middlewares/CheckPermission";
 
 const router = Router();
 
-router.get("/",CheckPermission(Action.READ_CATGORY),CategoryController.GetAllCategorys)
+router.get("/",CheckPermission(Action.READ_CATGORY),Authentication,CategoryController.GetAllCategorys)
 router.post("/",CheckPermission(Action.WRITE_CATEGORY),Authentication,CategoryController.CreateCategory)
 router.get("/:id",Authentication,CheckPermission(Action.READ_CATGORY),CategoryController.GetCategory)
 router.put("/:id",Authentication,CategoryController.UpdateCategory)

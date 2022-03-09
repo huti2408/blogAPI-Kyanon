@@ -2,6 +2,7 @@ import {Request, Response} from "express";
 import { StatusCodes } from "http-status-codes";
 import apiMessage from "../constants/Message";
 import connection from "../lib/mysql-connection";
+import { DeleteValue } from "../lib/redis-helper";
 
 export default class PermissionController {
     public static async GetAllPermissions(req: Request, res: Response){
@@ -37,6 +38,7 @@ export default class PermissionController {
             note = '${note}' 
             Where id = ${id} `
             await connection.promise().query(sql)
+            DeleteValue(user_id)
             res.status(apiMessage.UPDATE.StatusCodes).json(apiMessage.UPDATE.message)
         }
         catch(err:any){
@@ -47,7 +49,9 @@ export default class PermissionController {
     public static async DeletePermission(req: Request, res: Response){
         try{
             const {id} = req.params
+            const {user_id} = req.body
             let sql = `Delete from user_permission where id = ${id}`
+            DeleteValue(user_id)
             await connection.promise().query(sql)
             res.status(apiMessage.DELETE.StatusCodes).json(apiMessage.DELETE.message)
         }

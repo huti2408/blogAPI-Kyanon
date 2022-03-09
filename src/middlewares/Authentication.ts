@@ -7,23 +7,28 @@ const TOKEN_VALUE_INDEX = 1
 interface DecodeType{
     id:number,
     email:string,
+    permissions:[]
     exp:number
 }
 
 export default async (req:Request,res:Response,next:NextFunction)=>{
     const tokenJWT = req.headers["authorization"]?.split(" ")[TOKEN_VALUE_INDEX] || ""
     try {
-        const decode = jwt.decode(tokenJWT) as DecodeType
-        const userId = decode.id
-        const table = await GetValue(userId)
-        const checkValid = table.find(token=> token.token_value === tokenJWT).is_valid
-        if(checkValid)   
-        {
-            jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
-            next()
+        if(tokenJWT){
+            const decode = jwt.decode(tokenJWT) as DecodeType
+            const userId = decode.id
+            const tokenRedis = await GetValue(userId)
+            if(tokenRedis)   
+            {
+                jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
+                next()
+            }
+            else{
+                res.status(StatusCodes.UNAUTHORIZED).json("Invalid Token")
+            }
         }
         else{
-            res.status(StatusCodes.OK).json("Invalid Token")
+            res.status(StatusCodes.UNAUTHORIZED).json("Invalid Token")
         }
         
     }

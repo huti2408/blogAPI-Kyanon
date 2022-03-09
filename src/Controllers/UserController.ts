@@ -5,8 +5,16 @@ import md5 from "md5"
 import apiMessage from "../constants/Message";
 import connection from "../lib/mysql-connection";
 import User from "../Models/User"
-import { SetValue} from "../lib/redis-helper";
+import { DeleteValue, SetValue} from "../lib/redis-helper";
 
+
+const TOKEN_VALUE_INDEX = 1
+interface DecodeType{
+    id:number,
+    email:string,
+    permission:[]
+    exp:number
+}
 export default class UserController{
     public static async GetAllUsers(req: Request, res: Response){
         try{
@@ -112,19 +120,17 @@ export default class UserController{
                    res.status(StatusCodes.OK).json("Email or password is not correct!")
                }
                else{
+                   
                 const userId = existedUser.id
                 const userEmail = existedUser.email;
-                const date = new Date()
+                let sql = `SELECT permission.id,user_permission.note
+                FROM permission, user_permission
+                WHERE user_permission.user_id = ${userId} AND user_permission.permission_id=permission.id;`
+                const permissions = (await connection.promise().query(sql))[0]
                 const token = jwt.sign({
-                    id:userId,email:userEmail
+                    id:userId,email:userEmail,permissions:permissions
                 },process.env.KEY_JWT || "SADASC")
-                SetValue(userId,{
-                    userId:userId,
-                    token_value:token,
-                    is_valid:true,
-                    createdAt:date.toLocaleString('en-GB', { timeZone: 'UTC' }),
-                    updatedAt:null
-                })
+                SetValue(userId,token)
                 res.status(StatusCodes.ACCEPTED).json(token)
                }
            }
@@ -132,6 +138,20 @@ export default class UserController{
         catch(err){
             console.log(err.message);
             res.status(StatusCodes.UNAUTHORIZED).json({error: err.message});
+        }
+    }
+
+    public static async LogOut(req: Request, res: Response){
+        try{
+            const tokenJWT = req.headers["authorization"]?.split(" ")[TOKEN_VALUE_INDEX] || ""
+            const decode = jwt.decode(tokenJWT) as DecodeType
+            const userId = decode.id
+            DeleteValue(userId)
+            res.status(StatusCodes.OK).json("Log out Successfully!")
+        }
+        catch(err:any){
+            console.log(err.message);
+            res.status(StatusCodes.UNAUTHORIZED).json("Server error");
         }
     }
 }
