@@ -2,19 +2,13 @@ import {Request, Response} from "express";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken"
 import md5 from "md5"
+import lodash, { nth } from "lodash"
 import apiMessage from "../constants/Message";
 import connection from "../lib/mysql-connection";
 import User from "../Models/User"
 import { DeleteValue, SetValue} from "../lib/redis-helper";
+import _ from "lodash";
 
-
-const TOKEN_VALUE_INDEX = 1
-interface DecodeType{
-    id:number,
-    email:string,
-    permission:[]
-    exp:number
-}
 export default class UserController{
     public static async GetAllUsers(req: Request, res: Response){
         try{
@@ -43,21 +37,17 @@ export default class UserController{
             const dateNow = new Date();
             const {firstName, middleName,lastName,mobile,email,password} = req.body;
             var passwordHash = md5(password);
-            let findExisted = `Select * from user Where email = '${email}'`
+            let findExisted = `Select * from user Where email = ?`
             var existedUser: any; 
-            connection.query(findExisted,(err,result)=>{
+            connection.query(findExisted,email,(err,result)=>{
                 existedUser = result
             })
             if(!existedUser){
-                let sql = `INSERT INTO User (firstName, middleName,lastName,mobile,email,passwordHash,registeredAt) Values
-                ('${firstName}',
-                '${middleName}',
-                '${lastName}',
-                '${mobile}',
-                '${email}',
-                '${passwordHash}',
-                '${dateNow.getFullYear().toString()+ '-' + dateNow.getMonth() + '-' + dateNow.getDate() +" " +dateNow.getHours() + ":" + dateNow.getMinutes() + ":" + dateNow.getSeconds()}')`
-            connection.query(sql,(err)=>{
+                let sql = `INSERT INTO User (firstName, middleName,lastName,mobile,email,passwordHash,registeredAt) Values(?,?,?,?,?,?,?)`
+                connection.query(sql,
+                    [firstName,middleName,lastName,mobile,email,passwordHash,
+                        dateNow.getFullYear().toString()+ '-' + dateNow.getMonth() + '-' + dateNow.getDate() +" " +dateNow.getHours() + ":" + dateNow.getMinutes() + ":" + dateNow.getSeconds()
+                    ],(err)=>{
                     if(err) throw err
                     else res.status(StatusCodes.CREATED).json("Register successfully!")
                 })
@@ -78,14 +68,14 @@ export default class UserController{
             const {firstName, middleName,lastName,mobile,email,password} = req.body
             var passwordHash = md5(password);
             let sql = `UPDATE User SET 
-                firstName = '${firstName}',
-               middleName = '${middleName}',
-               lastName = '${lastName}',
-               mobile = '${mobile}',
-               email = '${email}',
-               passwordHash = '${passwordHash}'
+                firstName = ?,
+               middleName = ?,
+               lastName = ?,
+               mobile = ?,
+               email = ?,
+               passwordHash = ?
             Where id = ${id} `
-            connection.query(sql,(err)=>{
+            connection.query(sql,[firstName,middleName,lastName,mobile,email,passwordHash],(err)=>{
                 if(err) throw err
                 else res.status(StatusCodes.OK).json(apiMessage.UPDATE)
             })
@@ -110,28 +100,55 @@ export default class UserController{
         try{
            const {email, password} = req.body
            const passwordHash = md5(password)
-           let findExisted = `Select * from user Where email = '${email}'`
-           var existedUser = (await connection.promise().query(findExisted))[0][0]
+           let findExisted = `Select * from user Where email = ?`
+           var existedUser = (await connection.promise().query(findExisted,email))[0][0]
            if(!email || !password){
                res.status(StatusCodes.BAD_REQUEST).json("Bad Request")
            }
            else {
                if(!existedUser || existedUser.passwordHash !== passwordHash){
-                   res.status(StatusCodes.OK).json("Email or password is not correct!")
+                   res.status(StatusCodes.OK).json({message:"Email or password is not correct!"})
                }
-               else{
-                   
+               else{                 
                 const userId = existedUser.id
                 const userEmail = existedUser.email;
-                let sql = `SELECT permission.id,user_permission.note
+                var permissionObj:any
+                let sql = `SELECT permission.resource,permission.action
                 FROM permission, user_permission
                 WHERE user_permission.user_id = ${userId} AND user_permission.permission_id=permission.id;`
                 const permissions = (await connection.promise().query(sql))[0]
+                if(Array.isArray(permissions)){
+                    permissionObj = _.groupBy(permissions,'resource')
+                    var newObj = Object.values(permissionObj).map(rs=>{
+                    if(!Array.isArray(rs)){
+                        return res.status(StatusCodes.UNAUTHORIZED).json("Server error");
+                    }
+                    else{
+                        return rs.map(item=>item.action)
+                    }
+                    })
+                    Object.keys(permissionObj).map((item,index)=>{
+                        permissionObj[item] = newObj[index]
+                    })               
+                }
+                else{
+                    throw new Error
+                }
                 const token = jwt.sign({
-                    id:userId,email:userEmail,permissions:permissions
+                    id:userId,email:userEmail,permissions:permissionObj
                 },process.env.KEY_JWT || "SADASC")
-                SetValue(userId,token)
-                res.status(StatusCodes.ACCEPTED).json(token)
+                setTimeout(()=>{
+                    SetValue(userId,token)
+                },0)
+                res.status(StatusCodes.OK).json({token})
+                // new Promise((resolve, reject) => {
+                //     if(userId) resolve(userId)
+                //     else reject("User ID not found")
+                // }).then(userId=>{
+                //     SetValue(userId,token)
+                // }).catch(err=>{
+                //     console.log(err)
+                // })
                }
            }
         }
@@ -142,12 +159,13 @@ export default class UserController{
     }
 
     public static async LogOut(req: Request, res: Response){
+        const {userId} = req.body
+        if(!userId){
+            return res.status(StatusCodes.UNAUTHORIZED).json("Server error");
+        }
         try{
-            const tokenJWT = req.headers["authorization"]?.split(" ")[TOKEN_VALUE_INDEX] || ""
-            const decode = jwt.decode(tokenJWT) as DecodeType
-            const userId = decode.id
             DeleteValue(userId)
-            res.status(StatusCodes.OK).json("Log out Successfully!")
+            res.status(StatusCodes.OK).json({message:"Log out Successfully!"})
         }
         catch(err:any){
             console.log(err.message);

@@ -18,10 +18,18 @@ export default class PermissionController {
     }
     public static async AssignPermission(req: Request, res: Response){
         try{ 
-            const {user_id,permission_id,note} = req.body
-            let sql = `INSERT INTO user_permission (user_id,permission_id,note) values (${user_id},${permission_id},'${note}')`
-            await connection.promise().query(sql)
+            const {userId,permissionId,note} = req.body
+            let sql = `INSERT INTO user_permission (user_id,permission_id,note) values (?,?,?)`
+            await connection.promise().query(sql,[userId,permissionId,note])
             res.status(apiMessage.CREATE.StatusCodes).json("Assign Permission Successfully!")
+            new Promise((resolve, reject) => {
+                if(userId) resolve(userId)
+                    else reject("User ID not found")
+            }).then(userId=>{
+                DeleteValue(userId)
+            }).catch(err=>{
+                console.log(err)
+            })
         }
         catch(err:any){
             console.log(err.message);
@@ -30,15 +38,14 @@ export default class PermissionController {
     }
     public static async UpdatePermission(req: Request, res: Response){
         try{ 
-            const {user_id,permission_id,note} = req.body
-            const {id} = req.params
+            const {userId,permissionId,note} = req.body
             let sql = `UPDATE user_permission SET 
-            user_id = ${user_id},
-            permission_id = ${permission_id},
-            note = '${note}' 
-            Where id = ${id} `
-            await connection.promise().query(sql)
-            DeleteValue(user_id)
+            user_id = ?,
+            permission_id = ?,
+            note = ? 
+            Where user_id = ${userId} AND permission_id = ${permissionId}`
+            await connection.promise().query(sql,[userId,permissionId,note])
+            DeleteValue(userId)
             res.status(apiMessage.UPDATE.StatusCodes).json(apiMessage.UPDATE.message)
         }
         catch(err:any){
@@ -48,10 +55,9 @@ export default class PermissionController {
     }
     public static async DeletePermission(req: Request, res: Response){
         try{
-            const {id} = req.params
-            const {user_id} = req.body
-            let sql = `Delete from user_permission where id = ${id}`
-            DeleteValue(user_id)
+            const {userId,permissionId} = req.body
+            let sql = `Delete from user_permission where user_id = ${userId} AND permission_id = ${permissionId}`
+            DeleteValue(userId)
             await connection.promise().query(sql)
             res.status(apiMessage.DELETE.StatusCodes).json(apiMessage.DELETE.message)
         }

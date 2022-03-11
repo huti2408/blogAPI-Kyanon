@@ -19,7 +19,12 @@
     BAD_REQUEST: {
         message:"BAD_REQUEST",
         StatusCodes:400
+    },
+    INVALID_TOKEN:{
+        message:"Invalid Token",
+        StatusCodes:401
     }
+    
 
 }
 export default apiMessage;

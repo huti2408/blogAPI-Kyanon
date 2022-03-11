@@ -5,7 +5,7 @@ import Authentication from "../middlewares/Authentication"
 const router = Router();
 
 router.get("/",UserController.GetAllUsers)
-router.post("/register",UserController.Register)
+router.post("/register",Authentication,UserController.Register)
 router.post("/login",UserController.Login)
 router.get("/:id",Authentication,UserController.GetUser)
 router.put("/:id",Authentication,UserController.UpdateUser)

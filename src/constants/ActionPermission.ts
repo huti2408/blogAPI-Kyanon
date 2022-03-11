@@ -1,7 +1,11 @@
-const Action = {
-    READ_POST: "ReadPost",
-    WRITE_POST: "WritePost",
-    READ_CATGORY: "ReadCategory",
-    WRITE_CATEGORY: "WriteCategory",
+const Permission = {
+    RESOURCE:{
+        POST:'post',
+        CATE:'category'
+    },
+    ACTIONS:{
+        READ:'read',
+        WRITE:'write',
+    }
 }
-export default Action
+export default Permission

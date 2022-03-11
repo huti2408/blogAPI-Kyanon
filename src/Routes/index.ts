@@ -7,8 +7,8 @@ import PermissionRoute from "./PermissionRoute"
 import Authentication from "../middlewares/Authentication"
 
 const router = (app:Express) =>{
-    app.use("/post", PostRoute);
-    app.use("/cate",CategoryRoute);
+    app.use("/post",Authentication, PostRoute);
+    app.use("/cate",Authentication,CategoryRoute);
     app.use("/user/",UserRoute);
     app.use("/permission",Authentication,PermissionRoute);
 }

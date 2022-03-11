@@ -10,7 +10,7 @@ export async function ConnectRedis(){
     await client.connect();
 }
     
-export async function SetValue(key:string, value:any){
+export async function SetValue(key:any, value:any){
 
     await client.setEx(key,60 * 60 * 4,value)
 }

@@ -2,6 +2,7 @@ import { NextFunction,Request, Response } from "express";
 import jwt from "jsonwebtoken"
 import { StatusCodes } from "http-status-codes";
 import { GetValue } from "../lib/redis-helper";
+import apiMessage from "../constants/Message";
 
 const TOKEN_VALUE_INDEX = 1
 interface DecodeType{
@@ -11,32 +12,36 @@ interface DecodeType{
     exp:number
 }
 
-export default async (req:Request,res:Response,next:NextFunction)=>{
+export default async (req: Request, res: Response,next:NextFunction)=>{
     const tokenJWT = req.headers["authorization"]?.split(" ")[TOKEN_VALUE_INDEX] || ""
-    try {
-        if(tokenJWT){
+    try{
+        if(!tokenJWT){
+            return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
+        }
+        else{
             const decode = jwt.decode(tokenJWT) as DecodeType
             const userId = decode.id
             const tokenRedis = await GetValue(userId)
-            if(tokenRedis)   
+            if(!tokenRedis)   
             {
-                jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
-                next()
+                return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
             }
             else{
-                res.status(StatusCodes.UNAUTHORIZED).json("Invalid Token")
+                if(tokenRedis === tokenJWT){
+                    jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
+                    next()
+                }
+                else{
+                    return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
+                }
             }
         }
-        else{
-            res.status(StatusCodes.UNAUTHORIZED).json("Invalid Token")
-        }
-        
     }
-    catch(err:any){
+    catch(err){
         console.log(err)
-        res.status(StatusCodes.UNAUTHORIZED).json({
-            err
-        })
+        res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
     }
-
+    
+        
+    
 }
