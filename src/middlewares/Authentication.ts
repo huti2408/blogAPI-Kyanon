@@ -27,12 +27,12 @@ export default async (req: Request, res: Response,next:NextFunction)=>{
                 return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
             }
             else{
-                if(tokenRedis === tokenJWT){
-                    jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
-                    next()
+                if(tokenRedis !== tokenJWT){
+                    return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
                 }
                 else{
-                    return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
+                    jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
+                    next()
                 }
             }
         }

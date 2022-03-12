@@ -22,12 +22,14 @@ export default (resource:string,action:string)=>{
             const decode = jwt.decode(tokenJWT) as DecodeType
             const permissions = decode.permissions
             const result = _.has(permissions,resource)            
-            if( !result && !permissions[resource].includes(action)){
-                return res.status(StatusCodes.FORBIDDEN).json("You dont have permission to access")  
-            }
-            else{
-                    next()            
-            }
+            // if( !result && !permissions[resource].includes(action)){
+            //     return res.status(StatusCodes.FORBIDDEN).json("You dont have permission to access")  
+            // }
+            // else{
+            //         next()            
+            // }
+            return permissions?.[resource]?.includes(action) ? next()
+            : res.status(StatusCodes.FORBIDDEN).json("You dont have permission to access")
         }      
     }
 }

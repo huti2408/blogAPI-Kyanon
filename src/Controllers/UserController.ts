@@ -112,28 +112,38 @@ export default class UserController{
                else{                 
                 const userId = existedUser.id
                 const userEmail = existedUser.email;
-                var permissionObj:any
+                var permissionObj={}
                 let sql = `SELECT permission.resource,permission.action
                 FROM permission, user_permission
                 WHERE user_permission.user_id = ${userId} AND user_permission.permission_id=permission.id;`
                 const permissions = (await connection.promise().query(sql))[0]
-                if(Array.isArray(permissions)){
-                    permissionObj = _.groupBy(permissions,'resource')
-                    var newObj = Object.values(permissionObj).map(rs=>{
-                    if(!Array.isArray(rs)){
-                        return res.status(StatusCodes.UNAUTHORIZED).json("Server error");
-                    }
-                    else{
-                        return rs.map(item=>item.action)
-                    }
-                    })
-                    Object.keys(permissionObj).map((item,index)=>{
-                        permissionObj[item] = newObj[index]
-                    })               
-                }
-                else{
-                    throw new Error
-                }
+
+                _.forEach(permissions,(value:any)=>{
+                    const resource = value.resource;
+                    const action = value.action
+                    console.log([action])
+                    _.has(permissionObj,resource) ? permissionObj[resource].push(action)
+                    :permissionObj[resource] = [action]
+                    
+                })
+                console.log(permissionObj)
+                // if(Array.isArray(permissions)){
+                //     permissionObj = _.groupBy(permissions,'resource')
+                //     var newObj = Object.values(permissionObj).map(rs=>{
+                //     if(!Array.isArray(rs)){
+                //         return res.status(StatusCodes.UNAUTHORIZED).json("Server error");
+                //     }
+                //     else{
+                //         return rs.map(item=>item.action)
+                //     }
+                //     })
+                //     Object.keys(permissionObj).map((item,index)=>{
+                //         permissionObj[item] = newObj[index]
+                //     })               
+                // }
+                // else{
+                //     throw new Error
+                // }
                 const token = jwt.sign({
                     id:userId,email:userEmail,permissions:permissionObj
                 },process.env.KEY_JWT || "SADASC")
