@@ -12,7 +12,7 @@ interface DecodeType{
 }
 
 const TOKEN_VALUE_INDEX = 1
-export default (resource:string,action:string)=>{
+export default (resource:string)=>{
     return async (req:Request, res:Response,next:NextFunction)=>{
         const tokenJWT = req.headers["authorization"]?.split(" ")[TOKEN_VALUE_INDEX] || ""
         if(!tokenJWT){
@@ -21,7 +21,7 @@ export default (resource:string,action:string)=>{
         else{
             const decode = jwt.decode(tokenJWT) as DecodeType
             const permissions = decode.permissions
-            const result = _.has(permissions,resource)            
+            const action = (req.method).toLowerCase()        
             // if( !result && !permissions[resource].includes(action)){
             //     return res.status(StatusCodes.FORBIDDEN).json("You dont have permission to access")  
             // }

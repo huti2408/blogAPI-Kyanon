@@ -17,3 +17,4 @@ router(app)
 app.listen(PORT,()=>{
     console.log("Server is running at: " +PORT);
 });
+export default app

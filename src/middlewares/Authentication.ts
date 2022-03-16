@@ -19,6 +19,7 @@ export default async (req: Request, res: Response,next:NextFunction)=>{
             return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
         }
         else{
+            jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
             const decode = jwt.decode(tokenJWT) as DecodeType
             const userId = decode.id
             const tokenRedis = await GetValue(userId)
@@ -31,7 +32,6 @@ export default async (req: Request, res: Response,next:NextFunction)=>{
                     return res.status(apiMessage.INVALID_TOKEN.StatusCodes).json({message:apiMessage.INVALID_TOKEN.message})
                 }
                 else{
-                    jwt.verify(tokenJWT, process.env.KEY_JWT || "nothing")
                     next()
                 }
             }

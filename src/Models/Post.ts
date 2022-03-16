@@ -20,12 +20,28 @@ export default class Post{
         return await connection.promise().query(sql)
     }
     
-    public static deleteById(id: any){
+    public static async deleteById(id: any){
         let sql = `Delete from post where id = ${id}`
-        connection.query(sql,(err)=>{
-            if(err) throw err
-            return "Delete post successfully!"
-        })
+        return await connection.promise().query(sql)
     }
+
+    public static async CreatePost({authorId,title,slug,content}){
+        const dateNow = new Date();
+        const createdAt = dateNow.getFullYear()+ '-' + dateNow.getMonth() + '-' + dateNow.getDate()
+        let sql = `INSERT INTO post (authorId,title,slug,createdAt,content) Values
+            (?,?,?,?,?)`
+        return await connection.promise().query(sql,[authorId,title,slug,createdAt,content])
+
+    }
+    public static async UpdatePost({title,slug,content,authorId},id){
+        
+            let sql = `UPDATE post SET 
+            title = ?, authorId = ?,slug=?,updatedAt = ?, content = ?
+            Where id = ${id} `
+            const dateNow = new Date();
+            const createdAt = dateNow.getFullYear()+ '-' + dateNow.getMonth() + '-' + dateNow.getDate()
+            return await connection.promise().query(sql,[title,authorId,slug,createdAt,content])
+    }
+    
     
 } 

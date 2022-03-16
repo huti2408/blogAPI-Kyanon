@@ -6,7 +6,7 @@ import PermissionController from "../Controllers/PermissionController";
 const router = Router();
 router.get('/',PermissionController.GetAllPermissions)
 router.post('/',PermissionController.AssignPermission)
-router.put('/',PermissionController.UpdatePermission)
+// router.put('/',PermissionController.UpdatePermission)
 router.delete('/',PermissionController.DeletePermission)
 
 
