@@ -1,18 +1,14 @@
-module.exports = {
+export default {
   env: {
     browser: true,
-    commonjs: true,
     es2021: true,
   },
-  extends: ["airbnb-base", "prettier"],
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaVersion: 12,
+    ecmaVersion: "latest",
+    sourceType: "module",
   },
-  plugins: ["prettier"],
-  rules: {
-    "no-await-in-loop": "off",
-    "no-irregular-whitespace": "off",
-    "no-restricted-syntax": "off",
-    "no-continue": "off",
-  },
+  plugins: ["@typescript-eslint"],
+  rules: {},
 };
